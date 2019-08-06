@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
 
 import requests
 from requests import Response
@@ -8,11 +6,23 @@ from requests import Response
 class BaseApi:
     method = "GET"
     url = ""
-    params = {}
-    headers = {}
-    json = {}
-    data = ""
-    cookies = {}
+    params = None
+    headers = None
+    json = None
+    data = None
+    cookies = None
+    files = None
+    auth = None
+    timeout = None
+    allow_redirects = True
+    proxies = None
+    hooks = None
+    stream = None
+    verify = None
+    cert = None
+
+    def __init__(self):
+        self.response = None
 
     def set_params(self, **params):
         self.params = params
@@ -27,20 +37,35 @@ class BaseApi:
         return self
 
     def set_cookie(self, key, value):
+        self.cookies = self.cookies or {}
         self.cookies.update({key: value})
         return self
 
-    def run(self):
-        self.response = requests.request(
+    def set_cookies(self, **kwargs):
+        self.cookies = self.cookies or {}
+        self.cookies.update(kwargs)
+        return self
+
+    def run(self, session=None):
+        session = session or requests.sessions.Session()
+        self.response = session.request(
             self.method,
             self.url,
             params=self.params,
             data=self.data,
-            json=self.json,
             headers=self.headers,
-            cookies=self.cookies
+            cookies=self.cookies,
+            files=self.files,
+            auth=self.auth,
+            timeout=self.timeout,
+            allow_redirects=self.allow_redirects,
+            proxies=self.proxies,
+            hooks=self.hooks,
+            stream=self.stream,
+            verify=self.verify,
+            cert=self.cert,
+            json=self.json
         )
-        print("response===================%s" %self.response.json())
         return self
 
     def validate(self, key, expect_value):
@@ -48,7 +73,6 @@ class BaseApi:
         assert value == expect_value
         return self
 
-    # 用例中既有validate又有extract时，extract要放在会后，此方法不能链式调用
     def extract(self, key):
         value = self.response
         for k in key.split("."):
@@ -59,7 +83,8 @@ class BaseApi:
                     value = getattr(value, k)
             elif isinstance(value, (requests.structures.CaseInsensitiveDict, dict)):
                 value = value[k]
-            print("key--------\n%s" % k, "\nvalue--------\n%s" % value, type(value))
         return value
 
+    def get_response(self) -> Response:
+        return self.response
 

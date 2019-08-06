@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
-from tests.api.httpbin import HttpGet, HttpPost, HttpGetCookies
+
+from tests.api.httpbin import HttpGet, HttpPost, HttpGetCookies, HttpGetSetCookies
 
 
 def test_get():
@@ -62,7 +63,6 @@ def test_parameters_extract():
         set_cookie("sm", "789").\
         run().\
         extract("json().cookies.sm")
-    assert cookie == "789"
 
     # step 2: user value as paramter
     HttpPost(). \
@@ -71,4 +71,23 @@ def test_parameters_extract():
         validate("status_code", 200). \
         validate("headers.server", "nginx"). \
         validate("json().json.user_id", cookie)
+
+
+def test_session():
+
+    import requests
+    session = requests.sessions.Session()
+
+    # login and get cookies
+    HttpGetSetCookies().set_params(token="246").run(session)
+
+    # step2: request another api, check cookie
+    resp = HttpPost().\
+        set_json({"you": "me"}).\
+        run(session).\
+        get_response()
+    request_headers = resp.request.headers
+
+    assert "token=246" == request_headers["cookie"]
+
 

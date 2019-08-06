@@ -27,3 +27,14 @@ class HttpGetCookies(BaseApi):
     method = "GET"
 
 
+class HttpGetSetCookies(BaseApi):
+    """
+    curl -X GET "http://httpbin.org/cookies/set?freeform=123" -H "accept: text/plain"
+    """
+    url = "http://httpbin.org/cookies/set"
+    headers = {"accept": "text/plain"}
+    method = "GET"
+
+
+
+
